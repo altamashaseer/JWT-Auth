@@ -1,0 +1,81 @@
+# api.rest
+
+# This file provides a sequence of API requests to test the authentication server.
+# You can run these requests in order using the VS Code REST Client extension.
+
+# =================================================================
+# Variables
+# =================================================================
+@hostname = localhost
+@port = 3000
+@host = http://{{hostname}}:{{port}}
+@accessToken =
+@refreshToken =
+
+# =================================================================
+# 1. Register a new user
+# =================================================================
+###
+# EXPECTED: 201 Created
+# @name registerUser
+POST {{host}}/register
+Content-Type: application/json
+
+{
+  "username": "testuser-super-essential",
+  "password": "password123"
+}
+
+# =================================================================
+# 2. Login to get tokens
+# =================================================================
+###
+# EXPECTED: 200 OK with access and refresh tokens
+# @name loginRequest
+POST {{host}}/login
+Content-Type: application/json
+
+{
+  "username": "testuser-essential",
+  "password": "password123"
+}
+
+# Capture tokens from the response
+@accessToken = {{loginRequest.response.body.accessToken}}
+@refreshToken = {{loginRequest.response.body.refreshToken}}
+
+###
+
+# =================================================================
+# 3. Access a protected route
+# =================================================================
+###
+# EXPECTED: 200 OK
+GET {{host}}/profile
+Authorization: Bearer {{accessToken}}
+
+# =================================================================
+# 4. Token Refresh
+# =================================================================
+###
+# EXPECTED: 200 OK with a new access token
+# @name refreshTokenRequest
+POST {{host}}/token
+Content-Type: application/json
+
+{
+  "token": "{{refreshToken}}"
+}
+
+# =================================================================
+# 5. Logout
+# =================================================================
+###
+# EXPECTED: 204 No Content
+# @name logoutRequest
+DELETE {{host}}/logout
+Content-Type: application/json
+
+{
+  "token": "{{refreshToken}}"
+}
